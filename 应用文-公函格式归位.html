@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公函格式归位</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eceee9; --panel:#ffffff; --text:#1f2328; --muted:#5f6670; --line:#d5d8d2;
+  --paper:#fffffb; --ink:#1b2a4a; --rule:#8d958f; --frame:#2e5a3a; --red:#c8102e; --mark:rgba(255,212,0,.55);
+  --btn:#1f2328; --btn-text:#fff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#15171a; --panel:#202328; --text:#e7e9ec; --muted:#a3a9b1; --line:#3a3f46; --btn:#e7e9ec; --btn-text:#15171a; }
+}
+:root[data-theme="dark"]{ --bg:#15171a; --panel:#202328; --text:#e7e9ec; --muted:#a3a9b1; --line:#3a3f46; --btn:#e7e9ec; --btn-text:#15171a; }
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.6}
+.wrap{max-width:1240px;margin:0 auto;padding:16px}
+h1{font-size:1.25rem;margin:0 0 4px}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.layout{display:grid;gap:18px}
+.pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.pick[hidden]{display:none}
+.pick label{font-weight:600;font-size:.95rem}
+.pick select{font:inherit;font-size:1rem;padding:8px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--panel);color:var(--text);min-width:min(100%,320px);min-height:42px}
+@media (min-width:1040px){ .layout{grid-template-columns:auto 1fr;align-items:start} .panel{position:sticky;top:12px} }
+
+/* ===== 作答纸 ===== */
+.sheet{
+  --fs:clamp(12px, calc((100vw - 44px) / 29.5), 21px);
+  --L:calc(var(--fs) * 1.95);
+  width:calc(var(--fs) * 29.5); max-width:100%;
+  background:var(--paper); border:2px solid var(--frame); color:var(--ink);
+  font-family:"KaiTi","STKaiti","Kaiti SC","楷体",serif; font-size:var(--fs);
+  box-shadow:0 2px 10px rgba(0,0,0,.12); position:relative;
+}
+@media (min-width:1040px){ .sheet{--fs:20px} }
+.sheet-head{border-bottom:2px solid var(--frame);padding:.25em .6em;font-family:system-ui,"Microsoft YaHei",sans-serif;font-size:.62em;color:var(--frame);font-weight:600;letter-spacing:.05em}
+.body{position:relative;padding:0 .6em}
+#rules{position:absolute;inset:0 .3em;pointer-events:none}
+#rules i{display:block;height:var(--L);border-bottom:1.5px dotted var(--rule)}
+#flow{position:relative}
+#ghosts{position:absolute;inset:0;pointer-events:none}
+.ln{min-height:var(--L);line-height:var(--L);position:relative;white-space:normal}
+.ln .k{display:inline-block;max-width:100%;vertical-align:top;position:relative;border-radius:3px}
+.ln .k.att{position:absolute;right:0;top:0}
+.ln.right{text-align:right}
+.divider .k{display:block;height:var(--L)}
+.divider .k::after{content:"";position:absolute;left:-.25em;right:-.25em;bottom:-1px;height:2.5px;background:var(--ink)}
+.pp{line-height:var(--L);position:relative;border-radius:3px;word-break:break-all;line-break:strict}
+.num{display:inline-block;min-width:var(--numw,2em)}
+.num[hidden]{display:none}
+.blank .x{position:absolute;left:-.1em;top:0;color:var(--red);font-weight:700;opacity:.85}
+.clean .blank .x,.clean .tick{display:none !important}
+.qno{display:inline-block;min-width:2em;text-align:center;color:var(--ink);font-family:"KaiTi","STKaiti",serif;font-size:1.25em;border-radius:3px}
+.sigcell .sig{display:none;font-family:"Zhi Mang Xing","STXingkai","华文行楷","KaiTi",cursive;font-weight:400;font-size:.8em;white-space:nowrap;vertical-align:middle}
+.signed .sigcell .sig{display:inline-block}
+.lic{max-width:1240px;margin:8px auto 24px;padding:0 16px;color:var(--muted);font-size:.8rem;text-align:center}
+.lic a{color:inherit}
+.dots button.hash{font-weight:700}
+.ul::after{content:"";position:absolute;left:0;right:0;bottom:.35em;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .7s .45s ease}
+.ul.on::after{transform:scaleX(1)}
+.tick{display:none;width:0;height:0;position:relative}
+.review .tick{display:inline-block}
+/* 批改红勾：约两字高、斜跨在句末标点上；半透明＋正片叠底，字仍透得出来 */
+.tick::before{content:"";position:absolute;left:-1.05em;bottom:-.35em;width:1.75em;height:2.05em;pointer-events:none;
+  opacity:.6;mix-blend-mode:multiply;
+  background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath d='M3 29 C7 31 10 35 13.5 43.5 C19 29 27 14 38 2.5' fill='none' stroke='%23d0021b' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.seg.hl{background:var(--mark)}
+[contenteditable="true"]{outline:1.5px dashed #2b7de9;outline-offset:2px;cursor:text}
+
+.score{width:100%;table-layout:fixed;border-collapse:collapse;font-family:system-ui,"Microsoft YaHei",sans-serif;font-size:.6em;color:var(--frame);border-top:2px solid var(--frame)}
+.score td,.score th{border:1.5px solid var(--frame);text-align:center;padding:.2em;font-weight:600}
+.score tr:first-child th{border-top:none}
+.score td:first-child,.score th:first-child{border-left:none}
+.score td:last-child,.score th:last-child{border-right:none}
+.score .val{height:2.1em;color:var(--red);font-family:"KaiTi","STKaiti",serif;font-size:1.9em;font-weight:700;line-height:1}
+.total{display:inline-block;border:2px solid var(--red);border-radius:50%;padding:0 .35em}
+.pageno{text-align:right;font-size:.6em;padding:.2em .6em;color:var(--frame);font-family:system-ui,sans-serif}
+
+/* ===== 控制面板 ===== */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.q{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-bottom:14px}
+.q b{color:var(--muted);font-weight:600;font-size:.82rem;display:block}
+.cap h2{margin:0 0 6px;font-size:1.15rem}
+.cap .rule{margin:0 0 6px}
+.cap .miss{margin:0;color:var(--red);font-size:.92rem}
+.dots{display:flex;gap:6px;margin:14px 0 10px;flex-wrap:wrap}
+.dots button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;padding:0}
+.dots button.on{background:var(--btn);color:var(--btn-text);border-color:var(--btn)}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+.bar button{font:inherit;font-size:.92rem;padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);background:transparent;color:var(--text);cursor:pointer;min-height:40px}
+.bar button.pri{background:var(--btn);color:var(--btn-text);border-color:var(--btn)}
+.bar button[aria-pressed="true"]{border-color:var(--red);color:var(--red)}
+.bar button:disabled{opacity:.4;cursor:default}
+.sec{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}
+.sec h3{font-size:.95rem;margin:0 0 8px}
+table.tally{width:100%;border-collapse:collapse;font-size:.88rem}
+table.tally td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.tally td.p{white-space:nowrap;color:var(--muted)}
+table.tally td.t{color:var(--red);font-weight:700;text-align:right;white-space:nowrap}
+table.tally tr[data-s]{cursor:pointer}
+.note{font-size:.84rem;color:var(--muted);margin:8px 0 0}
+.small{font-size:.84rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ .ul::after{transition:none} }
+
+/* 手机／窄屏：步骤说明＋按钮固定在屏幕底部，边按边看纸 */
+@media (max-width:1039px){
+  body{padding-bottom:var(--dockh,190px)}
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel);border-top:1px solid var(--line);
+        box-shadow:0 -6px 18px rgba(0,0,0,.28);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .dock .dots{display:none}
+  .dock .cap h2{font-size:1rem;margin:0 0 2px}
+  .dock .cap .rule{font-size:.86rem;line-height:1.45;margin:0 0 2px}
+  .dock .cap .miss{font-size:.78rem;line-height:1.4}
+  .dock .bar{margin-top:8px;flex-wrap:nowrap;gap:6px}
+  .dock .bar button{flex:1;padding:8px 4px;font-size:.86rem}
+  .dock .bar #next{flex:1.6}
+}
+@media print{
+  body{background:#fff} .panel,h1,.sub{display:none} .wrap{padding:0} .sheet{--fs:17px;box-shadow:none;width:calc(17px*29.5)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="h1"></h1>
+  <p class="sub" id="sub"></p>
+  <div class="pick" id="pickwrap" hidden><label for="pick">选一篇来复习</label><select id="pick"></select></div>
+  <div class="layout">
+    <div>
+      <div class="sheet" id="sheet">
+        <div class="sheet-head">原试题号码 No. Soalan (<span id="qno" class="qno">　　</span>)</div>
+        <div class="body" id="body"><div id="rules"></div><div id="flow"></div><div id="ghosts"></div></div>
+        <table class="score">
+          <colgroup><col style="width:15.5%"><col style="width:15.5%"><col style="width:15.5%"><col style="width:15.5%"><col style="width:16%"><col style="width:22%"></colgroup>
+          <tr><th colspan="4">评分</th><th rowspan="2">实得分数</th><th rowspan="2">评阅员签名</th></tr>
+          <tr><th>内容(5%)</th><th>语言(2%)</th><th>格式(2%)</th><th>技术(1%)</th></tr>
+          <tr><td class="val" id="sc-c"></td><td class="val" id="sc-l"></td><td class="val" id="sc-f"></td><td class="val" id="sc-t"></td><td class="val" id="sc-all"></td><td class="val sigcell"><span class="sig" aria-label="评阅员签名">林子策</span></td></tr>
+        </table>
+        <div class="pageno">第____页</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="q"><b>题目</b><span id="qtext"></span></div>
+      <div class="dock" id="dock">
+        <div class="cap" aria-live="polite"><h2 id="cap-h"></h2><p class="rule" id="cap-r"></p><p class="miss" id="cap-m"></p></div>
+        <div class="dots" id="dots"></div>
+        <div class="bar">
+          <button id="prev">◀ 上一步</button>
+          <button id="next" class="pri">下一步 ▶</button>
+          <button id="play">自动播放</button>
+          <button id="restart">重来</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="bar">
+          <button id="review" aria-pressed="false">内容满分 √</button>
+          <button id="fmt" aria-pressed="false">格式满分 ✕</button>
+          <button id="clean" aria-pressed="false">最终版本</button>
+        </div>
+        <p class="note">「最终版本」：去掉所有红勾红叉，只剩一篇干净的应用文，照着订正。</p>
+        <div id="tally" hidden>
+          <h3 style="margin-top:12px">内容 10√（3322＝每段√数）</h3>
+          <table class="tally" id="tally-t"></table>
+          <p class="note" id="tally-n"></p>
+        </div>
+      </div>
+
+      <div class="sec" id="teacher" hidden>
+        <h3>老师改稿</h3>
+        <div class="bar">
+          <button id="edit" aria-pressed="false">直接在纸上改字</button>
+          <button id="copy">复制全文</button>
+          <button id="reset">还原原稿</button>
+        </div>
+        <p class="note">改的字只存在这台电脑的浏览器里。要永久改：用记事本打开本档，请飞鑫改 <code>D:\[[☑]] FX store\项目\应用文归位\范文.py</code> 后重新组装。</p>
+        <p class="small" id="wc"></p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   老师可改区：整篇应用文的内容、乱稿与归位步骤
+   ─ els：最终版面由上到下的每一个部分
+       text 定稿文字 ／ segs 段落的给分点 [文字, 编号, 给分点名称]
+       blankBefore 这部分上面空几行 ／ align:"right" 靠右 ／ attach 跟某一行同一行（如公函日期）
+       messy 乱稿时的样子：text 错误写法、before 放错到谁前面、show:false 乱稿里漏写、indent 缩进、num 错误编号
+       messyOnly 乱稿才有、归位时要删掉的部分
+   ─ steps：每一步归位哪些部分（fix），以及字幕
+   ================================================================ */
+const DOCS = [{"id": "gh-yaoqing", "group": "公函", "label": "邀请类：硬体字比赛", "title": "公函格式归位", "sub": "把一封格式全乱的公函，一步一步搬回作答纸上的正确位置。", "question": "试以仁爱中学华文学会主席李志强的名义，拟函邀请至善中学派代表参加硬体字比赛。", "intro": "这是一封内容写对、格式全错的公函。按「下一步」，看每个部分怎样回到作答纸上的正确位置。", "qno": "1", "numWidth": "2em", "els": [{"k": "q", "type": "text", "messy": {"show": false}}, {"k": "a1", "type": "line", "text": "仁爱中学", "blankBefore": 1, "messy": {"text": "仁爱中学华文学会"}}, {"k": "a2", "type": "line", "text": "10, Jalan Pudu,"}, {"k": "a3", "type": "line", "text": "55200 Kuala Lumpur."}, {"k": "div", "type": "divider", "blankBefore": 1, "messy": {"show": false}}, {"k": "r1", "type": "line", "text": "王思齐先生", "blankBefore": 1}, {"k": "r2", "type": "line", "text": "至善中学华文学会顾问老师", "messy": {"show": false}}, {"k": "r3", "type": "line", "text": "78, Jalan Bukit,"}, {"k": "r4", "type": "line", "text": "43000 Kajang,"}, {"k": "r5", "type": "line", "text": "Selangor Darul Ehsan."}, {"k": "date", "type": "line", "text": "2026年6月20日", "attach": "r5", "messy": {"text": "20-6-2026", "align": "right", "before": "a1", "blankBefore": 1}}, {"k": "salute", "type": "line", "text": "王老师：", "blankBefore": 1, "messy": {"text": "尊敬的王老师"}}, {"k": "title", "type": "line", "text": "硬体字比赛邀请", "ul": true, "blankBefore": 1, "messy": {"text": "（硬体字比赛邀请）。"}}, {"k": "p1", "type": "para", "name": "首段", "blankBefore": 1, "messy": {"num": "1."}, "segs": [["为了弘扬中华书法艺术，", "g1", "宗旨一：弘扬书法"], ["提高中学生书写硬体字的能力，并推广汉字文化，", "g2", "宗旨二：提高能力、推广文化"], ["本校华文学会特拟此函，诚邀贵校选派代表参加“第一届仁爱盃硬体字书法比赛”。", "aim", "公函目的：邀请"]]}, {"k": "p2", "type": "para", "name": "第二段", "blankBefore": 1, "messy": {"num": ""}, "segs": [["此比赛定于2026年7月25日（星期六）上午8时至11时，在本校大礼堂举行。", "dtp", "日期时间地点"], ["比赛将分为初中组与高中组两个组别，凡贵校在籍学生均可报名参赛。", "d1", "详情一：组别与资格"], ["届时，本会将邀请本地著名书法家担任评审，并设有丰厚的奖金与奖状以示鼓励。随函附上比赛简章与报名表格。", "d2", "详情二：评审与奖励"]], "num": "2."}, {"k": "p3", "type": "para", "name": "第三段", "blankBefore": 1, "messy": {"num": "（二）"}, "segs": [["素闻贵校一向极力推广华文教育与中华文化活动，学生在文学及书写方面更是表现优异、屡创佳绩。", "praise", "赞语"], ["若贵校派学生代表前来参赛，必能升华本赛事水平。", "gain", "接纳的好处"]], "num": "3."}, {"k": "p4", "type": "para", "name": "末段", "blankBefore": 1, "messy": {"indent": true}, "segs": [["敬请尽早回函。", "reply", "请求回函"], ["先此致谢。", "thx", "致谢"]]}, {"k": "sig1", "type": "line", "text": "仁爱中学华文学会主席", "blankBefore": 3, "messy": {"text": "李志强主席启", "align": "right"}}, {"k": "sig2", "type": "line", "text": "　李志强　启", "messy": {"show": false}}, {"k": "sig3", "type": "line", "text": "（李志强）", "messy": {"show": false}}], "from": {"sig2": "sig1", "sig3": "sig1"}, "steps": [{"fix": ["blank"], "h": "起手式：先留空行", "r": "动笔前先把空行留好：第一行留空；发信人地址与横线之间、横线与收信人之间、称呼、标题、各段之间各空一行；署名前空三行。", "m": "红色 ✕ 就是批改时逐行检查的空行。空行一到位，其他部分只要搬进格子里。", "focus": "blanks"}, {"fix": ["q"], "h": "题号＋抄题（技术分）", "r": "「原试题号码」括号里写题号；平时练习把题目抄在最上面，抄完空一行再开始写。考试时只写题号、不抄题。", "m": "漏写题号扣技术分。抄题才知道题目给了哪些关键词：哪些照抄不给分，不跟着写又会离题。", "focus": ["qno", "q"]}, {"fix": ["a1", "a2", "a3"], "h": "发信人地址 → 左上", "r": "发信人地址靠左写在最上面，与边线平齐；第一行只写最高单位（仁爱中学）。", "m": "常见失分：写成「仁爱中学华文学会」——单位和职衔只写在署名。", "focus": ["a1"]}, {"fix": ["div"], "h": "分割横线", "r": "地址下面画一条长横线，横线上下各空一行。", "m": "常见失分：漏画横线、横线上下没空行。", "focus": ["div"]}, {"fix": ["r2"], "h": "收信人", "r": "横线下靠左：第一行姓名，第二行团体名称，接着写地址。", "m": "常见失分：只写姓名、漏写团体名称（会扣分）。", "focus": ["r2"]}, {"fix": ["date"], "h": "日期 → 收信人地址最后一行的右边", "r": "日期写在收信人地址最后一行的右边，跟边线对齐，按「年 月 日」的顺序写。", "m": "常见失分：日期写在右上角、写成「20-6-2026」。", "focus": ["date"]}, {"fix": ["salute"], "h": "称呼", "r": "姓＋职称＋冒号，例如「王老师：」，靠左。", "m": "常见失分：加「尊敬的」、漏冒号、称呼叫错人。", "focus": ["salute"]}, {"fix": ["title"], "h": "标题", "r": "标题靠左，简明扼要，下画横线，不加括号或任何标点。", "m": "常见失分：加括号、加句号、没画线。", "focus": ["title"]}, {"fix": ["p1", "p4"], "h": "首段与末段", "r": "首段和末段都不编号、不缩进，靠左顶格写。", "m": "常见失分：首段写「1.」、末段缩进。", "focus": ["p1", "p4"]}, {"fix": ["p2", "p3"], "h": "中间段编号", "r": "第二段起编号「2.」「3.」，编号后空一格再写；转行回到最左边。", "m": "常见失分：不编号、写成「（一）（二）」或「二、」。", "focus": ["p2#n", "p3#n"]}, {"fix": ["sig1", "sig2", "sig3"], "h": "署名 → 格式满分", "r": "署名靠左，三行紧挨着写：单位＋职衔 ／ 空一格全角＋姓名＋启 ／（姓名）。第二行的姓名前空一格，刚好跟第三行括号里的姓名对齐。", "m": "常见失分：写在右边、漏写单位职衔、三行之间空行。到这一步，格式 2 分全拿。", "focus": ["sig1", "sig2", "sig3"]}], "tallyNote": "公函·邀请类。3322：首段宗旨×2＋公函目的／第二段日期时间地点＋详情×2／第三段赞语＋好处／末段回函＋致谢。共 10√ ＝ 内容 5 分。"}];
+const PAGE = {"title": "公函格式归位", "sub": "把一封格式全乱的公函，一步一步搬回作答纸上的正确位置。"};
+
+/* ================================================================ */
+const $ = s => document.querySelector(s);
+const flow = $("#flow"), ghosts = $("#ghosts"), sheet = $("#sheet");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DUR = reduce ? 0 : 750;
+const CIRC = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮";
+let DOC, EL, STEPS, PARAS, edits = {}, nodes = {}, wraps = {}, cur = 0, timer = null;
+const store = { get(){ try{ return JSON.parse(localStorage.getItem("yyw-gw-" + DOC.id)) || {}; }catch(e){ return {}; } },
+                set(v){ try{ localStorage.setItem("yyw-gw-" + DOC.id, JSON.stringify(v)); }catch(e){} } };
+
+/* ---------- 建立元素（每换一篇重建一次） ---------- */
+function mk(e){
+  const w = document.createElement("div");
+  if(e.type === "para"){
+    w.className = "pp"; w.dataset.k = e.k;
+    const n = document.createElement("span"); n.className = "num"; n.dataset.nested = "1";
+    w.appendChild(n); nodes[e.k + "#n"] = n;
+    for(const [t,id] of e.segs){
+      const s = document.createElement("span"); s.className = "seg"; s.dataset.s = id; s.dataset.edit = id; s.textContent = edits[id] ?? t;
+      const tk = document.createElement("span"); tk.className = "tick"; tk.setAttribute("aria-hidden","true");
+      w.append(s, tk);
+    }
+    nodes[e.k] = w;
+  } else if(e.type === "text"){          // 多行纯文字（如抄题），没有编号和红勾
+    w.className = "pp"; w.dataset.k = e.k; w.dataset.edit = e.k; nodes[e.k] = w;
+  } else {
+    w.className = "ln" + (e.type === "divider" ? " divider" : "");
+    const s = document.createElement("span"); s.className = "k"; s.dataset.k = e.k;
+    if(e.type === "divider") s.dataset.kind = "divider"; else s.dataset.edit = e.k;
+    if(e.ul) s.classList.add("ul");
+    w.appendChild(s); nodes[e.k] = s;
+  }
+  wraps[e.k] = w;
+}
+function blank(key){
+  if(!wraps[key]){
+    const w = document.createElement("div"); w.className = "ln blank"; w.dataset.k = key;
+    w.innerHTML = '<span class="x">✕</span>'; wraps[key] = w; nodes[key] = w;
+  }
+  return key;
+}
+
+/* ---------- 某一步的版面状态 ---------- */
+function layout(step){
+  const F = new Set(STEPS.slice(1, step+1).flatMap(s=>s.fix));
+  const fixed = e => F.has(e.k);
+  let order = DOC.els.filter(e => e.messyOnly ? !fixed(e) : (fixed(e) || e.messy?.show !== false)).map(e=>e.k);
+  for(const e of DOC.els){
+    if(!fixed(e) && e.messy?.before && order.includes(e.k) && order.includes(e.messy.before)){
+      order.splice(order.indexOf(e.k), 1);
+      order.splice(order.indexOf(e.messy.before), 0, e.k);
+    }
+  }
+  order = order.filter(k => !(EL[k].attach && fixed(EL[k])));
+  const keys = [];
+  for(const k of order){
+    const e = EL[k], n = F.has("blank") ? (fixed(e) ? (e.blankBefore||0) : (e.messy?.blankBefore ?? e.blankBefore ?? 0)) : 0;
+    for(let i=0;i<n;i++) keys.push(blank(k + "~" + i));
+    keys.push(k);
+  }
+  return { F, fixed, keys };
+}
+
+function render(step){
+  const { F, fixed, keys } = layout(step);
+  const busy = document.activeElement?.isContentEditable ? document.activeElement : null;
+  const set = (el, v) => { if(el !== busy && el.textContent !== v) el.textContent = v; };
+  nodes.qno.textContent = F.has("q") ? (DOC.qno || "1") : "　　";
+  for(const e of DOC.els){
+    const ok = fixed(e), m = e.messy || {};
+    if(e.type === "text"){
+      set(nodes[e.k], edits[e.k] ?? e.text ?? DOC.question);
+    } else if(e.type === "para"){
+      const n = nodes[e.k + "#n"], v = ok ? (e.num || "") : (m.num ?? e.num ?? "");
+      n.textContent = v; n.hidden = !v;
+      wraps[e.k].style.marginLeft = (!ok && m.indent) ? "2em" : "0";
+    } else if(e.type !== "divider"){
+      const node = nodes[e.k];
+      set(node, ok ? (edits[e.k] ?? e.text) : (m.text ?? e.text));
+      wraps[e.k].classList.toggle("right", (ok ? e.align : (m.align ?? e.align)) === "right");
+      node.style.marginLeft = (!ok && m.indent) ? "2em" : "0";
+      if(e.ul) node.classList.toggle("on", ok);
+      if(e.attach && ok){ wraps[e.attach].appendChild(node); node.classList.add("att"); }
+      else if(node.parentNode !== wraps[e.k]){ wraps[e.k].appendChild(node); node.classList.remove("att"); }
+    }
+  }
+  flow.replaceChildren(...keys.map(k=>wraps[k]));
+  drawRules();
+}
+
+/* ---------- 作答纸横线 ---------- */
+function drawRules(){
+  const L = flow.querySelector(".ln")?.offsetHeight || 40;
+  const n = Math.max(30, Math.ceil(flow.offsetHeight / L) + 3);
+  const r = $("#rules");
+  if(r.children.length !== n) r.innerHTML = "<i></i>".repeat(n);
+  $("#body").style.minHeight = (n * L) + "px";
+}
+
+/* ---------- FLIP 动画 ---------- */
+function snapshot(){
+  const m = {};
+  for(const [k,el] of Object.entries(nodes)){
+    if(el.isConnected && !el.hidden && el.offsetParent !== null) m[k] = { r:el.getBoundingClientRect(), html:el.outerHTML, text:el.textContent };
+  }
+  return m;
+}
+function focusKeys(fo){ return fo === "blanks" ? Object.keys(nodes).filter(k=>k.includes("~") && nodes[k].isConnected) : (fo || []); }
+function go(step, opts={}){
+  const FROM = DOC.from || {};
+  step = Math.max(0, Math.min(STEPS.length-1, step));
+  const before = snapshot();
+  cur = step; render(step);
+  const after = snapshot();
+  if(!opts.instant && DUR){
+    const g = ghosts.getBoundingClientRect();
+    for(const k in before) if(!after[k]){
+      const d = document.createElement("div"); d.innerHTML = before[k].html;
+      const el = d.firstElementChild; el.removeAttribute("hidden"); el.removeAttribute("contenteditable");
+      Object.assign(el.style, { position:"absolute", left:(before[k].r.left-g.left)+"px", top:(before[k].r.top-g.top)+"px",
+        width:before[k].r.width+"px", margin:0, lineHeight:getComputedStyle(flow.querySelector(".ln")).lineHeight, textAlign:"left" });
+      ghosts.appendChild(el);
+      el.animate([{opacity:1,transform:"none",color:"#c8102e"},{opacity:0,transform:"translate(-1em,-.3em) scale(.8)"}],
+        {duration:DUR*0.9,easing:"ease-in",fill:"forwards"}).onfinish = ()=>el.remove();
+    }
+    let i = 0;
+    for(const k in after){
+      const el = nodes[k], a = after[k].r, b = before[k]?.r ?? before[FROM[k]]?.r;
+      if(el.dataset.nested){
+        if(!before[k]) el.animate([{transform:"scale(2.2)",opacity:0,color:"#c8102e"},{transform:"none",opacity:1}],{duration:DUR,easing:"cubic-bezier(.22,1,.36,1)"});
+        else if(before[k].text !== after[k].text) flash(el);
+        continue;
+      }
+      const delay = Math.min(i++ * 18, 220);
+      if(!before[k] && el.dataset.kind === "divider"){
+        el.animate([{transform:"scaleX(0)",transformOrigin:"left"},{transform:"scaleX(1)",transformOrigin:"left"}],{duration:DUR*1.1,delay:delay+DUR*0.3,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"});
+      } else if(b){
+        const dx = b.left - a.left, dy = b.top - a.top;
+        if(Math.abs(dx) > .5 || Math.abs(dy) > .5)
+          el.animate([{transform:`translate(${dx}px,${dy}px)`, opacity: before[k] ? 1 : 0},{transform:"none",opacity:1}],
+            {duration:DUR,delay,easing:"cubic-bezier(.2,.75,.2,1)",fill:"backwards"});
+      } else {
+        el.animate([{opacity:0,transform:"translateY(-.4em)"},{opacity:1,transform:"none"}],{duration:DUR*0.8,delay:delay+DUR*0.35,easing:"ease-out",fill:"backwards"});
+      }
+    }
+    const fo = STEPS[step].focus;
+    if(fo && !opts.back) setTimeout(()=>focusKeys(fo).forEach(k=>nodes[k] && flash(nodes[k])), DUR*0.6);
+  }
+  ui();
+  if(!opts.instant) follow(STEPS[step].focus);
+}
+function flash(el){ if(DUR) el.animate([{background:"var(--mark)"},{background:"var(--mark)",offset:.5},{background:"transparent"}],{duration:1500}); }
+const narrow = matchMedia("(max-width:1039px)");
+function follow(fo){
+  if(!narrow.matches || !fo) return;
+  const el = nodes[focusKeys(fo)[0]]; if(!el || !el.isConnected) return;
+  const dockH = $("#dock").offsetHeight, r = el.getBoundingClientRect();
+  scrollTo({ top:Math.max(0, scrollY + r.top + r.height/2 - (innerHeight - dockH) / 2), behavior: reduce ? "auto" : "smooth" });
+}
+function dockSize(){ document.body.style.setProperty("--dockh", ($("#dock").offsetHeight + 16) + "px"); }
+
+/* ---------- 面板 ---------- */
+const dots = $("#dots");
+/* 彩蛋：依序点「# 3 3 2 2」解锁老师改稿（只在本次打开有效，重新打开又藏起来） */
+let seq = "", seqT = 0;
+function press(label){
+  const now = Date.now(); if(now - seqT > 4000) seq = ""; seqT = now;
+  seq = (seq + label).slice(-5);
+  if(seq === "#3322"){ const t = $("#teacher"); t.hidden = false; t.scrollIntoView({block:"nearest", behavior: reduce ? "auto" : "smooth"}); flash(t); seq = ""; }
+}
+function buildDots(){
+  dots.replaceChildren();
+  STEPS.forEach((s,i)=>{ const b = document.createElement("button"); b.textContent = i; b.title = s.h; b.onclick = ()=>{ press(String(i)); stop(); go(i, {back:i<cur}); }; dots.appendChild(b); });
+  const b = document.createElement("button"); b.textContent = "#"; b.className = "hash"; b.setAttribute("aria-label","#"); b.onclick = ()=>press("#"); dots.appendChild(b);
+}
+function ui(){
+  const s = STEPS[cur], last = cur === STEPS.length-1;
+  $("#cap-h").textContent = s.h; $("#cap-r").textContent = s.r; $("#cap-m").textContent = s.m || "";
+  [...dots.children].forEach((b,i)=>b.classList.toggle("on", i===cur && !b.classList.contains("hash")));
+  $("#prev").disabled = cur === 0; $("#next").disabled = last;
+  scoreCells(); dockSize();
+}
+/* 评分栏：内容满分→内容 5；格式满分→格式 2；两个都按了→语言、技术、总分和评阅员签名一起出现 */
+function scoreCells(){
+  const c = sheet.classList.contains("review"), f = sheet.classList.contains("fmtok"), all = c && f;
+  $("#sc-c").textContent = c ? "5" : ""; $("#sc-f").textContent = f ? "2" : "";
+  $("#sc-l").textContent = all ? "2" : ""; $("#sc-t").textContent = all ? "1" : "";
+  $("#sc-all").innerHTML = all ? '<span class="total">10</span>' : "";
+  sheet.classList.toggle("signed", all);
+}
+function stop(){ clearInterval(timer); timer = null; $("#play").textContent = "自动播放"; }
+$("#next").onclick = ()=>{ stop(); go(cur+1); };
+$("#prev").onclick = ()=>{ stop(); go(cur-1, {back:true}); };
+$("#restart").onclick = ()=>{ stop(); setReview(false); setFormat(false); setClean(false); go(0, {back:true}); };
+$("#play").onclick = ()=>{
+  if(timer){ stop(); return; }
+  if(cur === STEPS.length-1) go(0, {back:true});
+  $("#play").textContent = "暂停";
+  timer = setInterval(()=>{ if(cur >= STEPS.length-1){ stop(); return; } go(cur+1); }, 2600);
+};
+addEventListener("keydown", e=>{
+  if(document.activeElement?.isContentEditable) return;
+  if(e.key === "ArrowRight" || e.key === " "){ e.preventDefault(); stop(); go(cur+1); }
+  if(e.key === "ArrowLeft"){ stop(); go(cur-1, {back:true}); }
+});
+
+/* ---------- 批改 √ ---------- */
+function buildTally(){
+  const t = $("#tally-t"); t.innerHTML = "";
+  PARAS.forEach(p=>{
+    p.segs.forEach(([, id, label], j)=>{
+      const tr = document.createElement("tr"); tr.dataset.s = id;
+      tr.innerHTML = `<td class="p">${j===0 ? p.name + "（" + p.segs.length + "√）" : ""}</td><td>${label}</td><td class="t">√</td>`;
+      tr.onmouseenter = ()=>hl(id,true); tr.onmouseleave = ()=>hl(id,false);
+      tr.onclick = ()=>{ const s = flow.querySelector(`[data-s="${id}"]`); s && flash(s); };
+      t.appendChild(tr);
+    });
+  });
+  $("#tally-n").innerHTML = DOC.tallyNote;
+}
+function hl(id,on){ flow.querySelectorAll(`[data-s="${id}"]`).forEach(s=>s.classList.toggle("hl",on)); }
+const toFinal = ()=>{ if(cur !== STEPS.length-1) go(STEPS.length-1, {instant:true}); };
+function setReview(on){
+  if(on){ setClean(false); toFinal(); }
+  sheet.classList.toggle("review", on); $("#tally").hidden = !on; $("#review").setAttribute("aria-pressed", on);
+  if(on && DUR) flow.querySelectorAll(".tick").forEach((t,i)=>t.animate([{opacity:0,transform:"scale(2.5)"},{opacity:1,transform:"none"}],{duration:450,delay:i*140,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"}));
+  scoreCells();
+}
+function setFormat(on){
+  if(on){ setClean(false); toFinal(); }
+  sheet.classList.toggle("fmtok", on); $("#fmt").setAttribute("aria-pressed", on);
+  if(on && DUR) flow.querySelectorAll(".blank .x").forEach((x,i)=>x.animate([{opacity:0,transform:"scale(2.5)"},{opacity:.85,transform:"none"}],{duration:400,delay:i*90,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"}));
+  scoreCells();
+}
+function setClean(on){
+  if(on){ toFinal(); setReview(false); setFormat(false); }
+  sheet.classList.toggle("clean", on); $("#clean").setAttribute("aria-pressed", on);
+  scoreCells();
+}
+$("#review").onclick = ()=>setReview(!sheet.classList.contains("review"));
+$("#fmt").onclick = ()=>setFormat(!sheet.classList.contains("fmtok"));
+$("#clean").onclick = ()=>setClean(!sheet.classList.contains("clean"));
+
+/* ---------- 老师改稿 ---------- */
+$("#edit").onclick = e=>{
+  const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+  e.currentTarget.setAttribute("aria-pressed", on);
+  if(on && cur !== STEPS.length-1) go(STEPS.length-1, {instant:true});
+  flow.querySelectorAll("[data-edit]").forEach(el=>{ el.contentEditable = on ? "true" : "false"; });
+};
+flow.addEventListener("input", e=>{
+  const el = e.target.closest("[data-edit]"); if(!el) return;
+  edits[el.dataset.edit] = el.textContent; store.set(edits); wordCount();
+});
+$("#reset").onclick = ()=>{
+  edits = {}; store.set(edits);
+  PARAS.forEach(p=>p.segs.forEach(([t,id])=>{ const s = flow.querySelector(`[data-s="${id}"]`); if(s) s.textContent = t; }));
+  go(cur, {instant:true}); wordCount();
+};
+function plain(){
+  const segText = id => flow.querySelector(`[data-s="${id}"]`)?.textContent ?? "";
+  const val = e => e.type === "text" ? (edits[e.k] ?? e.text ?? DOC.question)
+                 : e.type === "para" ? (e.num ? e.num + " " : "") + e.segs.map(([,id])=>segText(id)).join("")
+                 : e.type === "divider" ? "────────────────────────" : (edits[e.k] ?? e.text);
+  const out = [];
+  for(const e of DOC.els){
+    if(e.messyOnly || e.attach) continue;
+    for(let i=0;i<(e.blankBefore||0);i++) out.push("");
+    let s = val(e);
+    if(e.align === "right") s = "　".repeat(14) + s;
+    const att = DOC.els.find(x=>x.attach === e.k);
+    if(att) s += "　　　　" + (edits[att.k] ?? att.text);
+    out.push(s);
+  }
+  return out.join("\n");
+}
+$("#copy").onclick = async e=>{
+  const b = e.currentTarget, old = b.textContent;
+  try{ await navigator.clipboard.writeText(plain()); b.textContent = "已复制 ✓"; }catch(err){ b.textContent = "复制失败"; }
+  setTimeout(()=>b.textContent = old, 1600);
+};
+function wordCount(){
+  const s = PARAS.flatMap(p=>p.segs.map(([,id])=>flow.querySelector(`[data-s="${id}"]`)?.textContent ?? "")).join("");
+  $("#wc").textContent = `正文汉字 ${ (s.match(/[一-鿿]/g)||[]).length } 字（统考建议 150–200 字，合理扩展不扣分）。`;
+}
+
+/* ---------- 换一篇：清空重建 ---------- */
+function load(i){
+  stop();
+  DOC = DOCS[i]; edits = store.get();
+  EL = Object.fromEntries(DOC.els.map(e=>[e.k, e]));
+  STEPS = [{ fix:[], h:"原稿：格式全乱", r:DOC.intro, m:"" }, ...DOC.steps.map((s,j)=>({ ...s, h:CIRC[j] + " " + s.h }))];
+  PARAS = DOC.els.filter(e=>e.type === "para");
+  nodes = {}; wraps = {}; flow.replaceChildren(); ghosts.replaceChildren();
+  DOC.els.forEach(mk);
+  nodes.qno = $("#qno"); nodes.qno.dataset.nested = "1";   // 题号在表头，不参与位移动画
+  sheet.classList.remove("review","fmtok","clean","signed"); $("#tally").hidden = true;
+  ["#review","#fmt","#clean","#edit"].forEach(s=>$(s).setAttribute("aria-pressed","false"));
+  $("#qtext").textContent = DOC.question;
+  sheet.style.setProperty("--numw", DOC.numWidth || "2em");
+  if(DOCS.length === 1){ document.title = DOC.title; $("#h1").textContent = DOC.title; $("#sub").textContent = DOC.sub; }
+  buildDots(); buildTally();
+  go(0, {instant:true}); wordCount();
+}
+
+/* ---------- 启动 ---------- */
+if(DOCS.length > 1){
+  document.title = PAGE.title; $("#h1").textContent = PAGE.title; $("#sub").textContent = PAGE.sub;
+  const pick = $("#pick"), groups = {};
+  DOCS.forEach((d,i)=>{
+    const g = groups[d.group] ??= pick.appendChild(Object.assign(document.createElement("optgroup"), { label:d.group }));
+    g.appendChild(new Option(d.label, i));
+  });
+  $("#pickwrap").hidden = false;
+  pick.onchange = ()=>{ load(+pick.value); history.replaceState(null, "", "#" + DOC.id); };
+  const at = DOCS.findIndex(d=>"#" + d.id === location.hash);
+  pick.value = Math.max(0, at); load(+pick.value);
+} else load(0);
+const P = new URLSearchParams(location.search);
+if(P.get("step")) go(Math.min(+P.get("step"), STEPS.length-1), {instant:true});
+if(P.get("review")) setReview(true);
+if(P.get("fmt")) setFormat(true);
+addEventListener("resize", ()=>{ drawRules(); dockSize(); });
+document.fonts?.ready.then(drawRules);
+</script>
+<footer class="lic">© 2026 林子策 Lim Zi Ce · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" rel="license">CC BY-NC-SA 4.0</a> · <a href="https://github.com/lee666eel-commits/yingyongwen-guiwei">源码</a></footer>
+</body>
+</html>
