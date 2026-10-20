@@ -12,7 +12,7 @@ dict(id="gh-yaoqing", genre="公函", label="邀请类：硬体字比赛", singl
   question="试以仁爱中学华文学会主席李志强的名义，拟函邀请至善中学派代表参加硬体字比赛。",
   sender=["仁爱中学", "10, Jalan Pudu,", "55200 Kuala Lumpur."],
   recipient=["王思齐先生", "至善中学华文学会顾问老师", "78, Jalan Bukit,", "43000 Kajang,", "Selangor Darul Ehsan."],
-  date="2026年6月20日", salute="王老师：", title="硬体字比赛邀请", messy_sender="仁爱中学华文学会",
+  date="2026年6月20日", salute="王老师：", title="诚邀参加硬体字比赛", messy_sender="仁爱中学华文学会",
   paras=[
     [("为了弘扬中华书法艺术，", "g1", "宗旨一：弘扬书法"),
      ("提高中学生书写硬体字的能力，并推广汉字文化，", "g2", "宗旨二：提高能力、推广文化"),
