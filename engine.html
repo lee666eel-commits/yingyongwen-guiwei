@@ -56,8 +56,6 @@ h1{font-size:1.25rem;margin:0 0 4px}
 .divider .k::after{content:"";position:absolute;left:-.25em;right:-.25em;bottom:-1px;height:2.5px;background:var(--ink)}
 .pp{line-height:var(--L);position:relative;border-radius:3px;word-break:break-all;line-break:strict}
 .num{display:inline-block;min-width:var(--numw,2em);text-indent:0}
-/* 编号段：编号后空两格，转行与正文对齐（评阅主任意见） */
-.pp:has(>.num:not([hidden])){padding-left:var(--numw);text-indent:calc(-1 * var(--numw))}
 .num[hidden]{display:none}
 .blank .x{position:absolute;left:-.1em;top:0;color:var(--red);font-weight:700;opacity:.85}
 .clean .blank .x,.clean .tick{display:none !important}
