@@ -50,7 +50,9 @@ h1{font-size:1.25rem;margin:0 0 4px}
 .ln .k{display:inline-block;max-width:100%;vertical-align:top;position:relative;border-radius:3px}
 .ln .k.att{position:absolute;right:0;top:0}
 .ln.right{text-align:right}
-.divider .k{display:block;height:var(--L)}
+/* 横线不占行：画在上下两个空行的交界上 */
+.divider{min-height:0;height:0}
+.divider .k{display:block;height:0}
 .divider .k::after{content:"";position:absolute;left:-.25em;right:-.25em;bottom:-1px;height:2.5px;background:var(--ink)}
 .pp{line-height:var(--L);position:relative;border-radius:3px;word-break:break-all;line-break:strict}
 .num{display:inline-block;min-width:var(--numw,2em)}
